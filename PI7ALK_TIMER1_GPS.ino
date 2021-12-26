@@ -181,7 +181,7 @@ const int dsymbol = 165;
 long int r0, r1, r2, r3, r4, r5;
  
 
-// Write data to ADF code developed by PA0FYM
+// Write data to ADF code developed by PA3FYM
 //------------------------------------------------------------
 
 void write2PLL(uint32_t PLLword) {          // clocks 32 bits word  directly to the ADF4351
