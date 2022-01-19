@@ -40,7 +40,7 @@
 
 
  D3 / NANO  PIN 3   - PWM for PI4 beacon
- D12 / NANO PIN 13  - 1PPM is indicate start of a minute
+ D12 / NANO PIN 12  - 1PPM is indicate start of a minute
                       and testmode during boot. 
  
  PWM range and Calculation
@@ -151,7 +151,7 @@ bool cw_only = false;
 
 /* Nano Pin definition */
 const int8_t PWM_pin = 3;    // Define PWM Pin D3
-const int8_t GPI_pin = 12;   // Define GPI Input Pin D13
+const int8_t GPI_pin = 12;   // Define 1PPM Input Pin D13
 
 char *txstr;
 
