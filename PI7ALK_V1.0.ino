@@ -272,10 +272,10 @@ void sendmsg(char *txstr)
 ------------------------------------------------------------
  We have to deal with symbols 0 to 3 and with 4 frequency's
 
-  PI4 tone0 							:	3.400.924.882,8125 Hz
-  PI4 tone1 							:	3.400.925.117,1875 Hz
-  PI4 tone2 							:	3.400.925.351,5625 Hz
-  PI4 tone3 							:	3.400.925.585,9375 Hz
+    PI4 tone0 :	3.400.924.882,8125 Hz
+    PI4 tone1 :	3.400.925.117,1875 Hz
+    PI4 tone2 :	3.400.925.351,5625 Hz
+    PI4 tone3 :	3.400.925.585,9375 Hz
 */
 
 void sendpi4(){
