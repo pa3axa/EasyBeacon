@@ -1,13 +1,15 @@
 /* 
- ADF4350/51 PLL Frequency Init and beacon message.
+ ADF4350/51 PLL Frequency Init and CW + PI4 beacon message.
 
-  Beacon can be PWM by modulating the OCXO control
-  voltage, or CW by switching PLL on the ADF4351
+  Beacon with PWM by modulating the OCXO control
+  voltage, to accuratly generated the PI4 sequence
+  ADF4351 has limitations to program the correct
+  frequency's 
 
  Inspired by:
    
  CW beacon software for PLL ADF4351 and ATTiny45 
- can be compiled with arduino 
+ can be compiled with arduino IDE
  v 0.1 Ondra OK1CDJ 9/2018 ondra@ok1cdj.com
  
  Parts of this code is based on routines written by PA3FYM
@@ -29,16 +31,18 @@
  to get PLL register values. ADF reference OCXO is 10 Mhz.
 
  
- PIN layout
+ Arduino NANO PIN layout
+----------------------------------------------------------------
+
+ PB0 ADF4531 latch enable (LE)
+ PB1 ADF4531 data (DATA)
+ PB2 ADF4531 clock (CLK)   
+
+
+ D3 / NANO  PIN 3   - PWM for PI4 beacon
+ D12 / NANO PIN 13  - 1PPM is indicate start of a minute
+                      and testmode during boot. 
  
- PB4 ADF4531 clock (CLK)   
- PB3 ADF4531 data (DATA)
- PB2 ADF4531 latch enable (LE)
-
- PB0 PWM for PI4 beacon ( might need CW reversing code )
- PB1 ADF4531 Control can be used for RX/TX frequency control or
- external Morsecode input for CW of FSK TX.
-
  PWM range and Calculation
 ----------------------------------------------------------------
  PLL steps in 200 khz to match the PI4 frequency requirement
@@ -47,40 +51,38 @@
  
  Attiny85 Clock is internal clock is set to 8 Mhz
  
- 
- All mesurement made from a starting point with PWM set
- to 50% = 127. The potmeter RV2 is set to mid voltage range
- between PWM 0% and PWM 100% measured on the OCXO control pin.
+ All measurements are made from a starting point with PWM set
+ to 50% = 127. This should be the CW Carrier Frequency 
 
- This help to get a lineair range for the PWM
+ There is a buildin test mode this initiated by holding the 1PPM
+ input to groud during boot. The frequency will loop between
+ 3 frequency's by just changing the PWM values between 27, 127
+ and 227, this should result in 3 frequency's extact 100 Hz apart.
 
- Measured offset between 0% and 100% PWM
-----------------------------------------------------------------
- 100% -225 Hz
- 0%   +226 Hz
+ A 2 second  ground off 1PPM input changefrom loop to PWM 127 this should match
+ the desired CW Freqency of in this case 3400.925.000 hz. A 2 second
+ ground 1PPM input will return to loop between 27.127.227 PWM. 
 
- This equals to 225/127 = 1.77 Hz Step
+ The exit test mode reset the Arduino Nano.
 
- PLL steps in 200 khz to match the PI4 requirement we use the PWM
- from the Attiny 85 at 31,25 Khz
-
+ After this alignment we can modify the PLL output with 1 Hz / PWM Digit.
  
  PVM value for the calculated STEPS
 
   PI4 Tone | Caculated Frequncy   | PLL Frequnecy  | PWM Offset   
 ----------------------------------------------------------------
- PI4 tone0 : 3.400.924.882,8125 Hz; 3.400.924.800     +83 
- PI4 tone1 : 3.400.925.117,1875 Hz; 3.400.925.200     -82 
+ PI4 tone0 : 3.400.924.882,8125 Hz; 3.400.924.800     +82 
+ PI4 tone1 : 3.400.925.117,1875 Hz; 3.400.925.200     -83 
  PI4 tone2 : 3.400.925.351,5625 Hz; 3.400.924.400     -49 
- PI4 tone3 : 3.400.925.585,9375 Hz; 3.400.924.600     -14 
+ PI4 tone3 : 3.400.925.585,9375 Hz; 3.400.924.600     -15 
 
 
  PWM Frequency Offset to 8bit PWM Value
- ----------------------------------------------------------------
- PI4-0  +82 = 81
- Pi4-1  -83 = 168
- PI4-2  -49 = 154
- PI4-3  -15 = 135
+----------------------------------------------------------------
+ PI4-0  +82 = 209
+ Pi4-1  -83 = 44
+ PI4-2  -49 = 78
+ PI4-3  -15 = 112
 
 
 */
@@ -147,21 +149,17 @@ const uint32_t car_time = 59500;
 
 bool cw_only = false;
 
-const int8_t PWM_pin = 1;    // Define PWM Pin PB1
-const int8_t GPI_pin = 0;    // Define GPI Input Pin PB0
+/* Nano Pin definition */
+const int8_t PWM_pin = 3;    // Define PWM Pin D3
+const int8_t GPI_pin = 12;   // Define GPI Input Pin D13
 
 char *txstr;
 
 /*
  Data created by https://rudius.net/oz2m/ngnb/pi4encoding.php
  146 symbols take 24.333382s , symbol time = 166.664ms ~ 6Hz symbol_rate
- PA3AXA/B, 432,200 Mhz
  
-int8_t fsymbols[] = {2,0,3,2,2,1,1,1,1,0,3,2,3,0,3,2,0,1,0,0,0,3,2,0,0,3,1,0,2,3,3,3,3,2,0,3,
-                     3,1,3,1,0,0,1,1,2,1,3,3,1,0,1,0,1,3,2,1,3,0,1,0,2,2,0,2,1,1,1,1,3,2,1,0,
-                     1,0,2,0,0,2,3,3,3,1,1,2,1,0,0,3,2,0,1,2,3,2,2,2,2,1,2,2,1,1,2,0,0,2,2,3,
-                     3,0,0,2,0,1,3,2,0,1,3,3,0,1,3,3,0,1,3,2,3,0,3,0,1,2,0,0,2,3,3,3,2,2,0,0,1,3};
-*/
+ */
 
 // PI7ALK, 3400,925 Mhz
 //
@@ -170,18 +168,18 @@ int8_t fsymbols[] = {2,0,3,2,0,1,3,3,1,2,3,2,3,2,1,2,0,1,2,2,0,1,2,2,2,3,3,2,2,1
                      1,2,0,2,0,2,3,3,3,3,3,2,1,0,0,3,0,2,3,2,3,2,0,0,2,3,0,0,1,3,0,2,2,0,2,3,
                      1,0,2,2,0,1,3,2,2,1,1,3,2,3,3,1,0,1,3,0,3,2,3,2,3,2,2,0,2,1,1,3,0,2,2,2,1,1};
 
-// Init PI4 symbol time in ms
-// A delay of 166; this gives a measured latch time of 167,6 is ~ ms 1.3ms
+/* Init PI4 symbol time in ms
+   A delay of 166; this gives a measured latch time of 167,6 is ~ ms 1.3ms */
 const int dsymbol = 165;
  
-// Int PWM values L0 is half range, expected range +/- 225 Hz
-// Values need to be adjusted to the hardware in the sendpi4().
+/*Int PWM values L0 is half range, expected range 27, 127, 227 Hz
+ Values need to be adjusted to the hardware in the sendpi4().*/
 
-// ADF PLL registers
+/* ADF PLL registers */
 long int r0, r1, r2, r3, r4, r5;
- 
 
-// Write data to ADF code developed by PA3FYM
+
+/* Write data to ADF code developed by PA0FYM, PI7ALK Hardware */
 //------------------------------------------------------------
 
 void write2PLL(uint32_t PLLword) {          // clocks 32 bits word  directly to the ADF4351
@@ -191,21 +189,21 @@ void write2PLL(uint32_t PLLword) {          // clocks 32 bits word  directly to 
   
   for (byte i=32; i>0; i--) {               // PLL word 32 bits
      
-    (PLLword & 0x80000000? PORTB |= 0b00001000 : PORTB &= 0b11110111);   // data on PB3
+    (PLLword & 0x80000000? PORTB |= 0b000000010 : PORTB &= 0b11111101);   // data on PB1
                                                                                
-    PORTB |= 0b00010000;                   // clock in bit on rising edge of CLK (PB4 = 1)
-    PORTB &= 0b11101111;                   // CLK (PB4 = 0)      
+    PORTB |= 0b00000100;                   // clock in bit on rising edge of CLK (PB2 = 1)
+    PORTB &= 0b11111011;                   // CLK (PB2 = 0)      
     PLLword <<= 1;                         // rotate left for next bit
     }
-    PORTB |= 0b00000100;                   // latch in PLL word on rising edge of LE (PB2 = 1)
-    PORTB &= 0b11111011;                   // LE (PB2 = 0)      
+    PORTB |= 0b00000001;                   // latch in PLL word on rising edge of LE (PB0 = 1)
+    PORTB &= 0b11111110;                   // LE (PB0 = 0)      
 
   interrupts();                           // enable interrupts 
 
 } 
 
 
-// FSK CW Routines
+/* FSK CW Routines */
 //------------------------------------------------------------
 
 void dit(){
@@ -290,7 +288,7 @@ void sendpi4(){
 
       r0 = 0xAA0AED8;             // 3.400.924.800,000 hz
       delay(dsymbol);
-      analogWrite(PWM_pin, 81);   // PWM Correction +82 Hz
+      analogWrite(PWM_pin, 209);  // PWM Correction +82 Hz
       write2PLL(r0);
       break;
       
@@ -298,7 +296,7 @@ void sendpi4(){
 
       r0 = 0xAA0AEE8;             // 3.400.925.200,0000 hz
       delay(dsymbol);
-      analogWrite(PWM_pin, 168);  // PWM Correction -83 Hz
+      analogWrite(PWM_pin, 44);   // PWM Correction -83 Hz
       write2PLL(r0);
       break;
      
@@ -306,7 +304,7 @@ void sendpi4(){
 
       r0 = 0xAA0AEF0;             // 3.400.925.400,0000 Hz
       delay(dsymbol);
-      analogWrite(PWM_pin, 154);  // PWM Correction -49 Hz
+      analogWrite(PWM_pin, 78);   // PWM Correction -49 Hz
       write2PLL(r0);
       break;
       
@@ -314,7 +312,7 @@ void sendpi4(){
 
       r0 = 0xAA0AEF8;             // 3.400.925.600,0000 Hz
       delay(dsymbol);
-      analogWrite(PWM_pin, 135);  // PWM Correction -15 Hz
+      analogWrite(PWM_pin, 112);  // PWM Correction -15 Hz
       write2PLL(r0); 
       break;  
     }       
@@ -325,7 +323,7 @@ void sendpi4(){
 
 
                                    
-// Setup Hardware Defaults
+/* Setup Hardware Defaults */
 //------------------------------------------------------------
 
 void setup () {
@@ -333,16 +331,30 @@ void setup () {
 delay(2000);                     // Wait for ADF5341 to powerup
 
 
-  /* Set TIMER1 to Fast PWM 8-bit TOP=255
-   *  
-   *  TCCR1  : Timer/Counter1 Control Register
-   *  PWM1A  : Enable PWM Timer 1
-   *  COM1A1 : CompareMode Select, Clear Compared Match
-   *  CS10   : No prescaler 8bit counter clocked @ 8 Mhz
-   *           equals a PWM rate of 31,372 Knz
-   */
+ /*  Set TIMER1 to Fast PWM 8-bit TOP=255
+  *  
+  *  TCCR1  : Timer/Counter1 Control Register
+  *  PWM1A  : Enable PWM Timer 1
+  *  COM1A1 : CompareMode Select, Clear Compared Match
+  *  CS10   : No prescaler 8bit counter clocked @ 8 Mhz
+  *           equals a PWM rate of 31,372 Knz
+  *
+
+  * Arduino NANO Timers, IDE uses Timer 0
+  *  
+  *  Timer0 = PIN D5 &  D6
+  *  Timer1 = PIN D9 & D10
+  *  Timer2 = PIN D3 & D11
+  *
+  * Arunino Nano Timer 1 & Timer 2
+ */ 
+   
+  /* Nano Timer1 PIN D9 & D10 */
+  // TCCR1B = TCCR1B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
   
-  TCCR1 = _BV(PWM1A)  | _BV(COM1A1) | _BV(CS10);
+  /* Nano Timer 2 PIN D3 & D11 */
+  TCCR2B = TCCR2B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
+
 
 /* Pre Init to program the ADF4350/51 */
 
@@ -380,11 +392,12 @@ Programed Frequency's PI7ALK 9CM 3400,92500 Mhz
   r5 = 0x580005;
 
  CW carrier/CW FSK mark frequency 		:	3.400.925.000 Hz r0 = 0xAA0AEE0
- CW FSK space frequency, -400 Hz 	  :	3.400.924.600 Hz r0 = 0xAA0AED0
+ CW FSK space frequency, -400 Hz 	    :	3.400.924.600 Hz r0 = 0xAA0AED0
 
  After Base setting r2 to r5 don't change 
- Fout = 3400.925.000 MHz +5dBm  only RF port 10Mhz REF 
- Default Register Value */
+ Fout = 3400.925.000 MHz -1dBm  only RF port 10Mhz REF
+ 
+ Default Register Values */
 
   r0 = 0xAA0AEE0;
   r1 = 0x80061A9;
@@ -404,12 +417,9 @@ Programed Frequency's PI7ALK 9CM 3400,92500 Mhz
 
 /* Setup PIN PB0 for PWM control */
 
-  pinMode(PWM_pin,OUTPUT );       // Pin to control OCXO reference
+ pinMode(PWM_pin, OUTPUT );      // Pin to control OCXO reference
  analogWrite(PWM_pin, 127);       // Set PWM to halfrange
  
- // digitalWrite(PWM_pin, LOW );  // Disable PWM for TEST
-
-
 /* set speed of morse in WPM */
      
      int wpm = 12;
@@ -418,93 +428,64 @@ Programed Frequency's PI7ALK 9CM 3400,92500 Mhz
      dashlen = (3 * (1200 / wpm));
      txstr = "PI7ALK JO22IP";
 
- /* Setup PIN PB0  for GPI_IN */ 
+ /* Setup PIN D12  for GPI_IN 1PPM */ 
+  
+ pinMode(GPI_pin, INPUT_PULLUP );     // GPI_pin to control PPM input
 
-  pinMode(GPI_pin,INPUT_PULLUP );     // GPI_pin to control PPM input
-
- /* */
    
-    delay(100);             // might not be needed
+ delay(100);             // might not be needed
     
-    r1 = 0x180061A9;        // disable VCO band switching after PLL frequentie init
-    write2PLL(r1);
+ r1 = 0x180061A9;        // disable VCO band switching after PLL frequentie init
+ write2PLL(r1);
 
-    
+  
+  /* Here we select to start the Alignment en Testmode*/  
   if ( digitalRead(GPI_pin) == LOW ) 
           { 
           testmode();
           }
 
-
-
-
          
 } // End Setup
 
 
-// Testmode
+/* Testmode */
 //-------------------------------------------------------------------------------------------------
 
 void testmode(){
 
-      analogWrite(PWM_pin, 127);    // PWM Correction 0 Hz
 
-      // T = YY, CW Carrier
+      // Set CW Carrier
       r0 = 0xAA0AEE0;                     // CW 
       write2PLL(r0);                      // ADF Write
 
-      /* Don't run testmode to quickly */
-      delay(10000);
-
-      /* Make GPI_in LOW to advance test */
-      
-      while ( digitalRead(GPI_pin) == HIGH )
+while ( digitalRead(GPI_pin) == HIGH )
       {
-      }
+      analogWrite(PWM_pin, 127);    // PWM Correction 0 Hz
+      delay(dsymbol);
+      
+      analogWrite(PWM_pin, 27);     // PWM Correction -100 Hz
+      delay(dsymbol);
 
+      analogWrite(PWM_pin, 227);    // PWM Correction +100 Hz
+      delay(dsymbol);
+      }
+      
       delay(2000);
-      analogWrite(PWM_pin, 0);    // PWM Correction MIN
-
-      /* Make GPI_in LOW to advance test */
       
-      while ( digitalRead(GPI_pin) == HIGH )
-      {
+while ( digitalRead(GPI_pin) == HIGH )
+      { 
+      analogWrite(PWM_pin, 127);    // CW Carrier
+      delay(dsymbol);
       }
-      
-      delay(2000);  
-      analogWrite(PWM_pin, 255);  // PWM Correction MAX
+      delay(2000);
+      testmode();
 
-      /* HOLD GPI_pin LOW for two seconds ends TEST Mode */
-
-      while ( digitalRead(GPI_pin) == HIGH )
-      {
-      }
-      
-      delay(10000);
-      if  ( digitalRead(GPI_pin) == HIGH )
-      {
-        testmode();
-      }
+} // To end testmode Reboot
 
 
-} // End TestMODE
 
-
-// Non blocking delay ( no used right now)
-//-------------------------------------------------------------------------------------------------
-
-void delay_nb(uint32_t t2 ){
-
-     uint32_t t1 = millis();
-
-
-      do {
-          /* Non blocking delay */
-          } while ( (millis() - t1) <= t2 );
-
-}
-
-// main loop total sequence should last 60 sec when transmitting PI4
+/* main loop total sequence should last 60 sec when transmitting PI4 */
 //------------------------------------------------------------------------------------------------- 
 
 void loop() {
@@ -539,9 +520,9 @@ void loop() {
 
          
       do {
-        /* Clock is to fast, with Attiny85 with no crystal so never right 
+        /* If clock is to fast, with Attiny85 with no crystal so never right 
            Needs GPS PPM ( pulse / minute ) to sync TX
-           Clock error compesation 59500 - 350.
+           ATTiny Clock error compesation 59500 - 350.
 
            For external PPM make this a little shorter so we have some
            waiting time for the puls to arrive.
@@ -568,7 +549,11 @@ void loop() {
           /*
          Time out Wait for External 1 PPM Pulse 
          after 30 sec no PPM we switch to CW beacon only
-         until PPM returns
+         until PPM returns.
+         
+         To indicate 1PPM lost we send now CW -400Hz
+         after FSK Call transmission
+        
         */
            if ( (millis() - loop_time) >= timeout_time ){
             sendmsg(txstr);
