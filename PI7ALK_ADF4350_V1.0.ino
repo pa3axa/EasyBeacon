@@ -403,7 +403,7 @@ Programed Frequency's PI7ALK 9CM 3400,92500 Mhz
   r1 = 0x80061A9;
   r2 = 0x60040E42; // Low spur mode
   r3 = 0x4B3; 
-  r4 = 0x80502C;  // -1 dbm RF OUTPUT
+  r4 = 0x805034;  // +2 dbm RF OUTPUT
   r5 = 0x580005;
 
 /* write from r5 to r0 to init ADF4350/ADF4351 */
