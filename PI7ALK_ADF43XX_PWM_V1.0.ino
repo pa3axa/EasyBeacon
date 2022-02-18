@@ -154,12 +154,12 @@ char *txstr;
  
 */
 
- // PA3AXA/B
- //
-int8_t fsymbols[] = {2,0,3,2,2,1,1,1,1,0,3,2,3,0,3,2,0,1,0,0,0,3,2,0,0,3,1,0,2,3,3,3,3,2,0,3,
-                     3,1,3,1,0,0,1,1,2,1,3,3,1,0,1,0,1,3,2,1,3,0,1,0,2,2,0,2,1,1,1,1,3,2,1,0,
-                     1,0,2,0,0,2,3,3,3,1,1,2,1,0,0,3,2,0,1,2,3,2,2,2,2,1,2,2,1,1,2,0,0,2,2,3,
-                     3,0,0,2,0,1,3,2,0,1,3,3,0,1,3,3,0,1,3,2,3,0,3,0,1,2,0,0,2,3,3,3,2,2,0,0,1,3};
+// PI7ALK, 3400,925 Mhz
+//
+int8_t fsymbols[] = {2,0,3,2,0,1,3,3,1,2,3,2,3,2,1,2,0,1,2,2,0,1,2,2,2,3,3,2,2,1,3,1,3,0,0,1,
+                     1,1,1,3,0,0,1,1,2,1,3,3,1,0,1,2,3,3,0,1,3,0,1,2,0,2,0,0,1,3,3,3,1,0,3,0,
+                     1,2,0,2,0,2,3,3,3,3,3,2,1,0,0,3,0,2,3,2,3,2,0,0,2,3,0,0,1,3,0,2,2,0,2,3,
+                     1,0,2,2,0,1,3,2,2,1,1,3,2,3,3,1,0,1,3,0,3,2,3,2,3,2,2,0,2,1,1,3,0,2,2,2,1,1};
 
 
 /* Init PI4 symbol time in ms
@@ -339,10 +339,10 @@ delay(2000);                     // Wait for ADF5341 to powerup
    // TCCR1B = TCCR1B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
   
   /* Nano Timer 2 PIN D3 & D11 */
-  // TCCR2B = TCCR2B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
+  TCCR2B = TCCR2B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
    
   /* Attiny85 Timer1 */
-  TCCR1 = _BV(PWM1A)  | _BV(COM1A1) | _BV(CS10);
+  //TCCR1 = _BV(PWM1A)  | _BV(COM1A1) | _BV(CS10);
 
 /* Pre Init to program the ADF4350/51 */
 
@@ -360,30 +360,8 @@ CW FSK space frequency, -400 Hz   : 3.400.924.600 Hz
                       PI4 tone2   : 3.400.925.351,5625 Hz
                       PI4 tone3   : 3.400.925.585,9375 Hz
 
+ Fout ADF43XX = 3400.925.000 MHz -1dBm  only RF port 10Mhz REF 
 
-Programed Frequency's PI7ALK 9CM 3400,92500 Mhz
-
- r0 = 0xAA0AED0; Fout = 3400.924.600 MHz
- r0 = 0xAA0AED8; Fout = 3400.924.800 MHz
- r0 = 0xAA0AEE0; Fout = 3400.925.000 MHz
- r0 = 0xAA0AEE8; Fout = 3400.925.200 MHz
- r0 = 0xAA0AEF0; Fout = 3400.925.400 MHz
- r0 = 0xAA0AEF8; Fout = 3400.925.600 MHz
-
- Other registers
-
-  r0 = 0xAA0AEE0;
-  r1 = 0x80061A9; after init 0x180061A9;
-  r2 = 0x60040E42; // Low spur mode
-  r3 = 0x4B3; 
-  r4 = 0x80502C;   // -1 dbm RF OUTPUT
-  r5 = 0x580005;
-
- CW carrier/CW FSK mark frequency     : 3.400.925.000 Hz r0 = 0xAA0AEE0
- CW FSK space frequency, -400 Hz    : 3.400.924.600 Hz r0 = 0xAA0AED0
-
- After Base setting r2 to r5 don't change 
- Fout = 3400.925.000 MHz +5dBm  only RF port 10Mhz REF 
  Default Register Value */
 
   r0 = 0xAA0AEE0;
@@ -402,21 +380,20 @@ Programed Frequency's PI7ALK 9CM 3400,92500 Mhz
      write2PLL(r1);
      write2PLL(r0);  
 
+
 /* Setup PIN PB0 for PWM control */
 
   pinMode(PWM_pin,OUTPUT );       // Pin to control OCXO reference
  analogWrite(PWM_pin, 127);       // Set PWM to halfrange
- 
- // digitalWrite(PWM_pin, LOW );  // Disable PWM for TEST
 
 
-/* set speed of morse in WPM */
+/* set speed and text for CW in WPM */
      
      int wpm = 12;
 
      dotlen = (1200 / wpm);
      dashlen = (3 * (1200 / wpm));
-     txstr = "PA3AXA/B JO22PJ";
+     txstr = "PI7ALK JO22IP";
 
 
  /* Setup PIN D12  for GPI_IN 1PPM */ 
