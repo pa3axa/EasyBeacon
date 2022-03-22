@@ -3,12 +3,13 @@
 
   Beacon can be PWM by modulating the OCXO control
   voltage, or CW by switching PLL on the ADF4351
-
- Inspired by:
    
  CW beacon software for PLL ADF4351 and ATTiny45 
- can be compiled with arduino 
- v 0.1 Ondra OK1CDJ 9/2018 ondra@ok1cdj.com
+ can be compiled with arduino IDE.
+
+  Inspired by:
+ 
+ V 0.1 Ondra OK1CDJ 9/2018 ondra@ok1cdj.com
  
  Parts of this code is based on routines written by PA3FYM
 
@@ -75,7 +76,15 @@
  PI4 tone2 : 3.400.925.351,5625 Hz ;   68 
  PI4 tone3 : 3.400.925.585,9375 Hz ;   27 
   
- CW-Space  : 3.400.924.600,0000 Hz ;  227 
+ CW-Space  : 3.400.924.600,0000 Hz ;  227
+
+ Version
+ ----------------------------------------------------------------
+ V1.0 Initial release.
+      PLL Control based on 200hz Channel Spacing. 
+      
+ V1.1 PLL Control based on 25khz Channel Spacing.
+      To reduce noise near the carrier.  
 
 */
 
@@ -339,10 +348,10 @@ delay(2000);                     // Wait for ADF5341 to powerup
    // TCCR1B = TCCR1B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
   
   /* Nano Timer 2 PIN D3 & D11 */
-  TCCR2B = TCCR2B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
+  //TCCR2B = TCCR2B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
    
   /* Attiny85 Timer1 */
-  //TCCR1 = _BV(PWM1A)  | _BV(COM1A1) | _BV(CS10);
+ TCCR1 = _BV(PWM1A)  | _BV(COM1A1) | _BV(CS10);
 
 /* Pre Init to program the ADF4350/51 */
 
@@ -362,14 +371,27 @@ CW FSK space frequency, -400 Hz   : 3.400.924.600 Hz
 
  Fout ADF43XX = 3400.925.000 MHz -1dBm  only RF port 10Mhz REF 
 
- Default Register Value */
+ Default Register Value
 
+ /*  200 hz Channel spacing for direct PI4 */
+/*
   r0 = 0xAA0AEE0;
   r1 = 0x80061A9;
   r2 = 0x60040E42; // Low spur mode
   r3 = 0x4B3; 
-  r4 = 0x80502C;  // -1 dbm RF OUTPUT
+  r4 = 0x85006C;  // -1 dbm RF OUTPUT
   r5 = 0x580005;
+
+*/
+ /* 25khz Channel Spacing for PWM PI4 */
+ 
+  r0 = 0x00AA0128;
+  r1 = 0x08008C81;
+  r2 = 0x60004E42; // Low spur mode
+  r3 = 0x000004B3; 
+  r4 = 0x0008502C;  // -1 dbm RF OUTPUT
+  r5 = 0x00580005;
+
 
 /* write from r5 to r0 to init ADF4350/ADF4351 */
  
@@ -420,7 +442,7 @@ void testmode(){
 
 
       // Set CW Carrier
-      r0 = 0xAA0AEE0;                     // CW 
+      r0 = 0xA00AA0128;                     // CW 
       write2PLL(r0);                      // ADF Write
 
 while ( digitalRead(GPI_pin) == HIGH )
