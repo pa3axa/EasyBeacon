@@ -348,10 +348,10 @@ delay(2000);                     // Wait for ADF5341 to powerup
    // TCCR1B = TCCR1B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
   
   /* Nano Timer 2 PIN D3 & D11 */
-  //TCCR2B = TCCR2B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
+  TCCR2B = TCCR2B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
    
   /* Attiny85 Timer1 */
- TCCR1 = _BV(PWM1A)  | _BV(COM1A1) | _BV(CS10);
+  //TCCR1 = _BV(PWM1A)  | _BV(COM1A1) | _BV(CS10);
 
 /* Pre Init to program the ADF4350/51 */
 
@@ -389,7 +389,7 @@ CW FSK space frequency, -400 Hz   : 3.400.924.600 Hz
   r1 = 0x08008C81;
   r2 = 0x60004E42; // Low spur mode
   r3 = 0x000004B3; 
-  r4 = 0x0008502C;  // -1 dbm RF OUTPUT
+  r4 = 0x00085034;  // +2 dbm RF OUTPUT
   r5 = 0x00580005;
 
 
