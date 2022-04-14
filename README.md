@@ -14,3 +14,7 @@ but decoding with PI-RX is still possible.
 
 Not sure how this influences the decoding at very low levels.
 
+Added new software version PI7ALK_ADF43XX_6POT_V1.0\
+to create PI4 sequences using 6 potmeters\
+and cmos switches.
+
