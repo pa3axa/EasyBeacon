@@ -16,11 +16,11 @@ Not sure how this influences the decoding at very low levels.
 
 ### Added new software
 
-The version PI7ALK_ADF43XX_6POT_V1.0 to create PI4\
+The version PI7ALK_ADF43XX_6POT_V1.0 creates FSK and PI4\
 sequences using 6 potmeters and CMOS switches in a\
 differential mode. The CW switch is always closed.
 
-The version PI7ALK_ADF43XX_6POT_V2.0 to create PI4\
+The version PI7ALK_ADF43XX_6POT_V2.0 to creates FSK and PI4\
 sequences using 6 potmeters and CMOS switches in a\
 direct mode. every switch is one frequency.
 
