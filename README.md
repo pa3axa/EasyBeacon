@@ -22,6 +22,6 @@ differential mode. The CW switch is always closed.
 
 The version PI7ALK_ADF43XX_6POT_V2.0 to creates FSK and PI4\
 sequences using 6 potmeters and CMOS switches in a\
-direct mode. every switch is one frequency.
+direct mode. Every switch is one frequency.
 
 
