@@ -351,7 +351,7 @@ delay(2000);                     // Wait for ADF5341 to powerup
   TCCR2B = TCCR2B & B11111000 | B00000001; // for PWM frequency of 31372.55 Hz
    
   /* Attiny85 Timer1 */
-  //TCCR1 = _BV(PWM1A)  | _BV(COM1A1) | _BV(CS10);
+  // TCCR1 = _BV(PWM1A)  | _BV(COM1A1) | _BV(CS10);
 
 /* Pre Init to program the ADF4350/51 */
 
@@ -373,24 +373,39 @@ CW FSK space frequency, -400 Hz   : 3.400.924.600 Hz
 
  Default Register Value
 
- /*  200 hz Channel spacing for direct PI4 */
-/*
-  r0 = 0xAA0AEE0;
-  r1 = 0x80061A9;
-  r2 = 0x60040E42; // Low spur mode
-  r3 = 0x4B3; 
-  r4 = 0x85006C;  // -1 dbm RF OUTPUT
-  r5 = 0x580005;
-
-*/
- /* 25khz Channel Spacing for PWM PI4 */
+/*  200 hz Channel spacing for direct PI4 */
  
+/*
+  r0 = 0x0AA0AEE0;
+  r1 = 0x080061A9;
+  r2 = 0x60040E42;  // Low spur mode
+  r3 = 0x000004B3; 
+  r4 = 0x0085006C;  // -1 dbm RF OUTPUT
+  r5 = 0x00580005;
+*/
+
+/* 25khz Channel Spacing for PWM PI4            */
+/* Spurs every 10Mhz for 80 Mhz + and - carrier */
+
+/*
   r0 = 0x00AA0128;
   r1 = 0x08008C81;
   r2 = 0x60004E42; // Low spur mode
   r3 = 0x000004B3; 
-  r4 = 0x00085034;  // +2 dbm RF OUTPUT
+  r4 = 0x00850034;  // +2 dbm RF OUTPUT
   r5 = 0x00580005;
+*/  
+  
+/* 25khz Channel Spacing for PWM PI4, Ref Doubler */
+/* Spurs every 20Mhz for 80 Mhz + and - carrier   */
+
+  r0 = 0x00550128;
+  r1 = 0x08009901;
+  r2 = 0x62004E42;  // Low spur mode
+  r3 = 0x000004B3; 
+  r4 = 0x008A0034;  // +2 dbm RF OUTPUT
+  r5 = 0x00580005;
+
 
 
 /* write from r5 to r0 to init ADF4350/ADF4351 */
@@ -442,7 +457,6 @@ void testmode(){
 
 
       // Set CW Carrier
-      r0 = 0xA00AA0128;                     // CW 
       write2PLL(r0);                      // ADF Write
 
 while ( digitalRead(GPI_pin) == HIGH )
