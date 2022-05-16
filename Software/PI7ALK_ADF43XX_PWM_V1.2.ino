@@ -86,6 +86,8 @@
  V1.1 PLL Control based on 25khz Channel Spacing.
       To reduce noise near the carrier.  
 
+ V1.2 PLL Control based on 25khz Channel Spacing.
+      and Ref Doubler to remove spurs @ 10Mhz from carrier.  
 */
 
 
