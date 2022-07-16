@@ -24,4 +24,5 @@ The version PI7ALK_ADF43XX_6POT_V2.0 to creates FSK and PI4\
 sequences using 6 potmeters and CMOS switches in a\
 direct mode. Every switch is one frequency.
 
-
+The version PI7ALK_ADF43XX_6POT_V2.1 fixes an programming\
+error in the way FSK CW is create.
