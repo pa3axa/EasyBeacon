@@ -72,7 +72,8 @@
  Version
  ----------------------------------------------------------------
  V1.0 Initial release.
-      6 Potmeter Control based for CW, SPACE and PI4_0 to PI4_3.   
+      Differentai 6 Potmeter Control for CW, SPACE and
+      PI4_0 to PI4_3. the CW potmeter is always active.  
 
 */
 
