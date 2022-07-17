@@ -299,8 +299,7 @@ void sendpi4(){
  
   for (int tx = 0 ; tx < 147 ; tx++){
 
-    switch (fsymbols[tx]){
-
+    
       delay(dsymbol);
       
       /* We have to clear all tones */
@@ -310,6 +309,8 @@ void sendpi4(){
       digitalWrite(PI4_2, LOW);
       digitalWrite(PI4_3, LOW);           
        
+    switch (fsymbols[tx]){
+
       case 0:                     // 3.400.924.882,8125 Hz
  
       digitalWrite(PI4_0, HIGH);
