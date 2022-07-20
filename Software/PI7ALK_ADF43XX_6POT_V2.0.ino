@@ -71,9 +71,8 @@
 
  Version
  ----------------------------------------------------------------
- V1.0 Initial release.
-      Differentai 6 Potmeter Control for CW, SPACE and
-      PI4_0 to PI4_3. the CW potmeter is always active.  
+ V2.0 Initial release.
+      Separated 6 Potmeter Control for CW, SPACE and PI4_0 to PI4_3.   
 
 */
 
@@ -214,12 +213,15 @@ void dit(){
 
   // FSK CW - 400 Hz
   
-  analogWrite(CW, HIGH);              // CW
-  delay(dotlen);
   
-  analogWrite(SPACE, HIGH);          // SET CW SPACE -400
+  digitalWrite(CW, HIGH);             // set CW
   delay(dotlen);
-  analogWrite(SPACE, LOW);           // CLEAR CW SPACE -400  
+  digitalWrite(CW, LOW);
+ 
+  
+  digitalWrite(SPACE, HIGH);          // SET CW SPACE -400
+  delay(dotlen);
+  digitalWrite(SPACE, LOW);
   }
 
 
@@ -227,12 +229,14 @@ void dash(){
 
   // FSK CW - 400 Hz
   
-  analogWrite(CW, HIGH);             // CW Default always on
+  digitalWrite(CW, HIGH);             // set CW
   delay(dashlen);
+  digitalWrite(CW, LOW);
   
-  analogWrite(SPACE, HIGH);          // SET SPACE -400
+
+  digitalWrite(SPACE, HIGH);          // Set SPACE -400
   delay(dotlen);
-  analogWrite(SPACE, LOW);           // CLEAR CW SPACE -400
+  digitalWrite(SPACE, LOW);
   }
 
 
@@ -300,7 +304,11 @@ void sendpi4(){
  
   for (int tx = 0 ; tx < 147 ; tx++){
 
-    
+      digitalWrite(CW, LOW);
+      digitalWrite(SPACE, LOW);
+
+    switch (fsymbols[tx]){
+
       delay(dsymbol);
       
       /* We have to clear all tones */
@@ -310,8 +318,6 @@ void sendpi4(){
       digitalWrite(PI4_2, LOW);
       digitalWrite(PI4_3, LOW);           
        
-    switch (fsymbols[tx]){
-
       case 0:                     // 3.400.924.882,8125 Hz
  
       digitalWrite(PI4_0, HIGH);
@@ -472,7 +478,7 @@ while ( digitalRead(GPST) == HIGH )
       digitalWrite(PI4_3, LOW);  
       
       delay(dsymbol);
-      digitalWrite(CW, HIGH);
+      digitalWrite(CW, LOW);
       digitalWrite(SPACE, HIGH);
       digitalWrite(PI4_0, LOW);
       digitalWrite(PI4_1, LOW);
@@ -480,7 +486,7 @@ while ( digitalRead(GPST) == HIGH )
       digitalWrite(PI4_3, LOW);
       
       delay(dsymbol);
-      digitalWrite(CW, HIGH);
+      digitalWrite(CW, LOW);
       digitalWrite(SPACE, LOW);
       digitalWrite(PI4_0, HIGH);
       digitalWrite(PI4_1, LOW);
@@ -488,7 +494,7 @@ while ( digitalRead(GPST) == HIGH )
       digitalWrite(PI4_3, LOW); 
 
       delay(dsymbol);
-      digitalWrite(CW, HIGH);
+      digitalWrite(CW, LOW);
       digitalWrite(SPACE, LOW);
       digitalWrite(PI4_0, LOW);
       digitalWrite(PI4_1, HIGH);
@@ -496,7 +502,7 @@ while ( digitalRead(GPST) == HIGH )
       digitalWrite(PI4_3, LOW); 
 
       delay(dsymbol);
-      digitalWrite(CW, HIGH);
+      digitalWrite(CW, LOW);
       digitalWrite(SPACE, LOW);
       digitalWrite(PI4_0, LOW);
       digitalWrite(PI4_1, LOW);
@@ -504,7 +510,7 @@ while ( digitalRead(GPST) == HIGH )
       digitalWrite(PI4_3, LOW); 
       
       delay(dsymbol);
-      digitalWrite(CW, HIGH);
+      digitalWrite(CW, LOW);
       digitalWrite(SPACE, LOW);
       digitalWrite(PI4_0, LOW);
       digitalWrite(PI4_1, LOW);
@@ -533,21 +539,22 @@ void loop() {
         sendpi4();
         }
 
-      digitalWrite(CW, HIGH);            // SET CW
       // T = 24.333
       digitalWrite(SPACE, HIGH);         // SET SPACE   -400 hz
       delay(667);
-      digitalWrite(SPACE, LOW);          // CLEAR SPACE -400 hz
+      digitalWrite(SPACE, LOW);
 
       // T = 25, CW Message
       sendmsg(txstr);
 
       // T ~ 40, SPACE for 500mS
-      digitalWrite( SPACE, HIGH);         // SET SPACE   -400 hz
+      digitalWrite(SPACE, HIGH);         // SET SPACE   -400 hz
       delay(500);
-      digitalWrite(SPACE, LOW);          // CLEAR SPACE -400 hz
+      digitalWrite(SPACE, LOW);
                       
-      // Util T = 59.5 CW  
+      // Util T = 59.5 CW
+      digitalWrite(CW, HIGH);         // SET CW
+ 
       
       do {
         /* 
@@ -567,6 +574,7 @@ void loop() {
           
 
       // T=59,5
+      digitalWrite(CW, LOW);
       digitalWrite(SPACE, HIGH);   // SET SPACE -400
 
       loop_time = millis();
