@@ -2,7 +2,11 @@
  ADF4350/51 PLL Frequency Init and beacon message.
 
   Beacon is modulating by changing resistor values of
-  the OCXO control voltage
+  the OCXO control voltage. Differential control CW
+  Potmeter P0 is always active.
+  
+ " NEVER TESTED  might have errors "
+
    
  CW beacon software for PLL ADF4351 and Aruino Nano
  can be compiled with arduino IDE.
@@ -60,14 +64,15 @@
 
  Frequency DATA for 3400.925 mhz PI7ALK
  
-  PI4 Tone | Caculated Frequncy    | PWM Offset   
+  PI4 Tone | Caculated Frequncy    | Potemeter   
 ----------------------------------------------------------------
- PI4 tone0 : 3.400.924.882,8125 Hz ;  157 
- PI4 tone1 : 3.400.925.117,1875 Hz ;  107 
- PI4 tone2 : 3.400.925.351,5625 Hz ;   68 
- PI4 tone3 : 3.400.925.585,9375 Hz ;   27 
+ PI4 tone0 : 3.400.924.882,8125 Hz ;  P1 
+ PI4 tone1 : 3.400.925.117,1875 Hz ;  P2 
+ PI4 tone2 : 3.400.925.351,5625 Hz ;  P3
+ PI4 tone3 : 3.400.925.585,9375 Hz ;  P4 
   
- CW-Space  : 3.400.924.600,0000 Hz ;  227
+ CW-Space  : 3.400.924.600,0000 Hz ;  P5
+ CW        : 3.400.926.000,0000 Hz ;  P0 
 
  Version
  ----------------------------------------------------------------
@@ -214,12 +219,12 @@ void dit(){
 
   // FSK CW - 400 Hz
   
-  analogWrite(CW, HIGH);              // CW
+  digitalWrite(CW, HIGH);              // CW
   delay(dotlen);
   
-  analogWrite(SPACE, HIGH);          // SET CW SPACE -400
+  digitalWrite(SPACE, HIGH);          // SET CW SPACE -400
   delay(dotlen);
-  analogWrite(SPACE, LOW);           // CLEAR CW SPACE -400  
+  digitalWrite(SPACE, LOW);           // CLEAR CW SPACE -400  
   }
 
 
@@ -227,12 +232,12 @@ void dash(){
 
   // FSK CW - 400 Hz
   
-  analogWrite(CW, HIGH);             // CW Default always on
+  digitalWrite(CW, HIGH);             // CW Default always on
   delay(dashlen);
   
-  analogWrite(SPACE, HIGH);          // SET SPACE -400
+  digitalWrite(SPACE, HIGH);          // SET SPACE -400
   delay(dotlen);
-  analogWrite(SPACE, LOW);           // CLEAR CW SPACE -400
+  digitalWrite(SPACE, LOW);           // CLEAR CW SPACE -400
   }
 
 
@@ -308,7 +313,9 @@ void sendpi4(){
       digitalWrite(PI4_0, LOW);
       digitalWrite(PI4_1, LOW);
       digitalWrite(PI4_2, LOW);
-      digitalWrite(PI4_3, LOW);           
+      digitalWrite(PI4_3, LOW);
+      
+      digitalWrite(SPACE, LOW);           
        
     switch (fsymbols[tx]){
 
